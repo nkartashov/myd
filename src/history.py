@@ -5,7 +5,6 @@ from functools import reduce
 
 
 class History(object):
-
     def __init__(self, history=None):
         self.__history = history if history else []
 

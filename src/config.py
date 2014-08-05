@@ -14,11 +14,13 @@ from history import History
 class Config(object):
     DEFAULT_APP_PATH = path.expanduser('~/.containers')
     DEFAULT_LXC_PATH = '/var/lib/lxc'
+    DEFAULT_UNPRIVILEGED_LXC_PATH = path.expanduser('~/.local/share/lxc')
     DEFAULT_HISTORY_FILENAME = 'history.p'
     DEFAULT_UNPRIVILEGED_CONTAINER_CONFIG_PATH = path.expanduser('~/.config/lxc/default.conf')
 
     APP_PATH = DEFAULT_APP_PATH
     LXC_PATH = DEFAULT_LXC_PATH
+    UNPRIVILEGED_LXC_PATH = DEFAULT_UNPRIVILEGED_LXC_PATH
     HISTORY_FILENAME = DEFAULT_HISTORY_FILENAME
     UNPRIVILEGED_CONTAINER_CONFIG_PATH = DEFAULT_UNPRIVILEGED_CONTAINER_CONFIG_PATH
 
@@ -42,7 +44,7 @@ class Config(object):
 
     @staticmethod
     def unprivileged_container_config_path(container_name):
-        return Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH
+        return path.join(path.join(Config.UNPRIVILEGED_LXC_PATH, container_name), 'config')
 
     @staticmethod
     def history_file_path():
@@ -63,6 +65,19 @@ class Config(object):
             dump(history, history_file)
 
     @staticmethod
+    def wipe_history():
+        if not path.exists(Config.history_file_path()):
+            return 'no history to remove'
+        os.remove(Config.history_file_path())
+        if not path.exists(Config.history_file_path()):
+            message_to_return = 'Successfully removed history'
+        else:
+            message_to_return = 'Unable to remove history from {0}'.format(Config.history_file_path())
+        logging.info(message_to_return)
+        return message_to_return
+
+
+    @staticmethod
     def wipe():
         rmtree(Config.APP_PATH)
 
@@ -73,5 +88,5 @@ class Config(object):
 
     @staticmethod
     def default_unprivileged_config_resource_path():
-        return path.join(path.join(path.dirname(__file__), 'resource'), 'default_unprivileged_config.txt')
+        return path.join(path.join(path.dirname(path.dirname(__file__)), 'resource'), 'default_unprivileged_config.txt')
 
