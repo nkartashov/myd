@@ -13,12 +13,15 @@ if __name__ == "__main__":
     parser = ArgumentParser(prog='containers')
     subparsers = parser.add_subparsers(help='', dest='command')
 
-    # add_parser = subparsers.add_parser('add', help='Adds containers to management')
-    # add_parser.add_argument('-n', '--name', help='Name of the container to add')
-    #
-    # assemble_parser = subparsers.add_parser('assemble', help='Assembles new containers out of old ones')
-    # assemble_parser.add_argument('-c', '--containers', help='Containers to assemble together, '
-    # 'they all should belong to different branches')
+    create_parser = subparsers.add_parser('create', help='Creates a new container')
+    create_parser.add_argument('-n', '--name', required=True, help='The name of the new container')
+    create_parser.add_argument('-d', '--distro', required=True,
+                               help='The distro from which the container will be created')
+    create_parser.add_argument('-r', '--release', required=True, help='The desired release of the container')
+    create_parser.add_argument('-a', '--architecture', required=True, help='The architecture of the system')
+    create_parser.add_argument('-B', '--backing_store', default='btrfs', help='Backing store (btrfs is best)')
+    create_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                               help='Flag if the container going to be unprivileged')
 
     copy_parser = subparsers.add_parser('copy', help='Copies a given container')
     copy_parser.add_argument('-o', '--original_name', required=True, help='Name of the ORIGINAL container')
@@ -74,7 +77,11 @@ if __name__ == "__main__":
                                              help='User ids in the format START-END')
 
     args = parser.parse_args()
+    Config.start_log()
     logging.info('Received args: {0}'.format(args))
+    if args.command == 'create':
+        LxcHelper.create_call(args.name, args.backing_store, args.distro, args.release, args.architecture,
+                              args.unprivileged)
     if args.command == 'copy':
         LxcHelper.copy_call(args.original_name, args.new_name)
     if args.command == 'remove':
@@ -105,4 +112,4 @@ if __name__ == "__main__":
     if args.command == 'wipe':
         Config.wipe()
     if args.command == 'prepare-unprivileged':
-        ConsoleHelper.prepare_unpriviliged_config(args.user_ids, args.group_ids)
+        ConsoleHelper.prepare_unprivileged_config(args.user_ids, args.group_ids)

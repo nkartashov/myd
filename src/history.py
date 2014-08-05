@@ -68,13 +68,16 @@ class History(object):
     def remember_remove(self, name):
         for branch in self.__history:
             if History.name(branch) == name:
-                self.__history.extend(History.children(branch))
+                self.__history.append(History.children(branch))
                 self.__history.remove(branch)
                 break
-            resulting_orphans, remove_occured = History.remove_from_node(branch, name)
-            if remove_occured:
-                self.__history.extend(resulting_orphans)
+            resulting_orphans, remove_occurred = History.remove_from_node(branch, name)
+            if remove_occurred:
+                self.__history.append(resulting_orphans)
                 break
+
+    def remember_create(self, name):
+        self.__history.append(History.new_node(name))
 
 
 if __name__ == '__main__':
