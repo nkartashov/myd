@@ -56,13 +56,15 @@ if __name__ == "__main__":
     patch_parser = net_parser_subparsers.add_parser('patch')
     patch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be patched')
     patch_parser.add_argument('-sip', '--static-ip', required=True, help='Static ip in the form a.b.c.d/e, like'
-                                                                           '10.0.3.100/24')
+                                                                         '10.0.3.100/24')
 
     unpatch_parser = net_parser_subparsers.add_parser('unpatch')
     unpatch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be unpatched')
 
     config_print_parser = subparsers.add_parser('config-print', help='Prints config file of a given container')
     config_print_parser.add_argument('-n', '--name', required=True, help='Name of the container which config to print')
+    config_print_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                                     help='Flag if the container is unprivileged')
 
     print_parser = subparsers.add_parser('print', help="Shows the current hierarchy of containers if it's present")
 
@@ -102,7 +104,7 @@ if __name__ == "__main__":
         if args.net_command == 'unpatch':
             ConsoleHelper.unpatch_container_config(args.name)
     if args.command == 'config-print':
-        ConsoleHelper.print_config_file(args.name)
+        ConsoleHelper.print_config_file(args.name, args.unprivileged)
     if args.command == 'print':
         history = Config.history()
         if not history:

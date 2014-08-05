@@ -17,11 +17,11 @@ class ConsoleHelper(object):
     LXC_IP_LINE = 'lxc.network.ipv4 '
 
     @staticmethod
-    def print_config_file(container_name):
-        config_file_path = Config.container_config_path(container_name)
+    def print_config_file(container_name, unprivileged=False):
+        config_file_path = Config.unprivileged_container_config_path(container_name) \
+            if unprivileged else Config.privileged_container_config_path(container_name)
         with open(config_file_path, 'r') as config_file:
-            for line in config_file.readlines():
-                print(line, end='')
+            print(config_file.read())
 
     @staticmethod
     def forward_port(container_ip, container_port, host_port, host_interface='eth0'):
@@ -45,7 +45,7 @@ class ConsoleHelper(object):
 
     @staticmethod
     def patch_container_config(container_name, static_ip):
-        config_file_path = Config.container_config_path(container_name)
+        config_file_path = Config.privileged_container_config_path(container_name)
         with open(config_file_path, 'r') as config_file:
             if any(ConsoleHelper.LXC_IP_LINE in line for line in config_file.readlines()):
                 logging.error('Config file has already been patched')
@@ -56,7 +56,7 @@ class ConsoleHelper(object):
 
     @staticmethod
     def unpatch_container_config(container_name):
-        config_file_path = Config.container_config_path(container_name)
+        config_file_path = Config.privileged_container_config_path(container_name)
         with open(config_file_path, 'r') as config_file:
             lines_for_patching = [(line, ConsoleHelper.LXC_IP_LINE in line) for line in config_file.readlines()]
         if not any(map(snd, lines_for_patching)):

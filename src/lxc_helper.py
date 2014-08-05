@@ -11,7 +11,7 @@ class LxcHelper(object):
         privileged_string = "sudo " if not unprivileged else ""
         command = privileged_string + "lxc-create -n {0} -B {1} -t download -- -d {2} -r {3} -a {4}". \
             format(name, backing_store, distro, release, arch)
-        if call(command, shell=True):
+        if call(command, shell=True) == 0:
             LxcHelper.__remember_create(name)
             logging.info('Created {5} container {0} with backing store {1} as ({2}, {3}, {4})'.
                          format(name, backing_store, distro, release, arch,

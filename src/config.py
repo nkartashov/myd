@@ -30,15 +30,19 @@ class Config(object):
     def start_log():
         Config.ensure_app_path_exists()
         log_file_list = glob(path.join(Config.APP_PATH, '*.log'))
-        log_file = log_file_list[0] if log_file_list else\
+        log_file = log_file_list[0] if log_file_list else \
             path.join(Config.APP_PATH, str(datetime.now()) + '.log')
         if not path.exists(log_file):
             os.open(log_file, os.O_CREAT, 0o777)
         logging.basicConfig(filename=log_file, level=logging.DEBUG)
 
     @staticmethod
-    def container_config_path(container_name):
+    def privileged_container_config_path(container_name):
         return path.join(path.join(Config.LXC_PATH, container_name), 'config')
+
+    @staticmethod
+    def unprivileged_container_config_path(container_name):
+        return Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH
 
     @staticmethod
     def history_file_path():
