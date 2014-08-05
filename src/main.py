@@ -83,7 +83,6 @@ if __name__ == "__main__":
 
     args = program_parser.parse_args()
     Config.start_log()
-    print(args)
     logging.info('Received args: {0}'.format(args))
     if args.command == 'create':
         LxcHelper.create_call(args.name, args.backing_store, args.distro, args.release, args.architecture,

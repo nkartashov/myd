@@ -21,7 +21,8 @@ class IptablesHelper(object):
 
     @staticmethod
     def unforward_port(to_ip, to_port, host_port, host_interface):
-        delete_cmd = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port, IptablesHelper.DELETE)
+        delete_cmd = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port,
+                                                         IptablesHelper.DELETE)
         call(delete_cmd, shell=True)
         logging.info('Removed rule: ' + delete_cmd)
 

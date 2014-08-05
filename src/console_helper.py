@@ -76,10 +76,10 @@ class ConsoleHelper(object):
 
     @staticmethod
     def ensure_unprivileged_dirs_exist():
-        dirs = ['~/.config/lxc/',
+        dirs = ('~/.config/lxc/',
                 '~/.local/share/lxc',
                 '~/.local/share/lxcsnaps',
-                '~/.cache/lxc']
+                '~/.cache/lxc')
         expanded_dirs = map(path.expanduser, dirs)
         for d in expanded_dirs:
             makedirs(d, exist_ok=True)
