@@ -19,13 +19,13 @@ if __name__ == "__main__":
                                help='The distro from which the container will be created')
     create_parser.add_argument('-r', '--release', required=True, help='The desired release of the container')
     create_parser.add_argument('-a', '--architecture', required=True, help='The architecture of the system')
-    create_parser.add_argument('-B', '--backing_store', default='btrfs', help='Backing store (btrfs is best)')
+    create_parser.add_argument('-B', '--backing-store', default='btrfs', help='Backing store (btrfs is best)')
     create_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
                                help='Flag if the container going to be unprivileged')
 
     copy_parser = program_subparsers.add_parser('copy', help='Copies a given container')
-    copy_parser.add_argument('-o', '--original_name', required=True, help='Name of the ORIGINAL container')
-    copy_parser.add_argument('-n', '--new_name', required=True, help='Name of the NEW container')
+    copy_parser.add_argument('-o', '--original-name', required=True, help='Name of the ORIGINAL container')
+    copy_parser.add_argument('-n', '--new-name', required=True, help='Name of the NEW container')
 
     remove_parser = program_subparsers.add_parser('remove', help='Removes a given container')
     remove_parser.add_argument('-n', '--name', required=True, help='Name of the container to be removed')
@@ -34,23 +34,24 @@ if __name__ == "__main__":
     net_parser_subparsers = net_parser.add_subparsers(help='', dest='net_command')
     forward_parser = net_parser_subparsers.add_parser('forward',
                                                       help='Forwards ports of a host machine to the container')
-    forward_parser.add_argument('-cip', '--container_ip', required=True, help='Container ip')
-    forward_parser.add_argument('-cp', '--container_port', required=True, help='Container port')
-    forward_parser.add_argument('-hp', '--host_port', required=True, help='Host port')
-    forward_parser.add_argument('-hi', '--host_interface', help='Host interface, default is eth0')
+    forward_parser.add_argument('-cip', '--container-ip', required=True, help='Container ip')
+    forward_parser.add_argument('-cp', '--container-port', required=True, help='Container port')
+    forward_parser.add_argument('-hp', '--host-port', required=True, help='Host port')
+    forward_parser.add_argument('-hi', '--host-interface', default='eth0', help='Host interface, default is eth0')
+    forward_parser.add_argument('-s', '--source-ip', default='0/0', help='Ip from which packets get forwarded')
 
     forward_conf_parser = net_parser_subparsers.add_parser('forward-conf',
                                                            help='Forwards ports of a host machine to the container'
                                                                 'using the configuration provided')
-    forward_conf_parser.add_argument('-conf', '--configuration_path', required=True,
+    forward_conf_parser.add_argument('-conf', '--configuration-path', required=True,
                                      help='Path to the configuration file')
 
     reforward_conf_parser = net_parser_subparsers.add_parser('reforward-conf',
                                                              help='Reforwards ports forwarded using configuration'
                                                                   'to another container with ip')
-    reforward_conf_parser.add_argument('-conf', '--configuration_path', required=True,
+    reforward_conf_parser.add_argument('-conf', '--configuration-path', required=True,
                                        help='Path to the configuration file')
-    reforward_conf_parser.add_argument('-cip', '--container_ip', required=True,
+    reforward_conf_parser.add_argument('-cip', '--container-ip', required=True,
                                        help='Container to reforward ports to ip')
 
     patch_parser = net_parser_subparsers.add_parser('patch')
@@ -75,7 +76,7 @@ if __name__ == "__main__":
 
     prepare_unprivileged_parser = \
         program_subparsers.add_parser('prepare-unprivileged',
-                              help='Prepares the system for creation of unprivileged controllers')
+                                      help='Prepares the system for creation of unprivileged controllers')
     prepare_unprivileged_parser.add_argument('-uids', '--user-ids', required=True,
                                              help='User ids in the format START-END')
     prepare_unprivileged_parser.add_argument('-gids', '--group-ids', required=True,
@@ -94,10 +95,8 @@ if __name__ == "__main__":
 
     if args.command == 'net':
         if args.net_command == 'forward':
-            if args.host_interface:
-                ConsoleHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface)
-            else:
-                ConsoleHelper.forward_port(args.container_ip, args.container_port, args.host_port)
+            ConsoleHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface,
+                                       args.source_ip)
         if args.net_command == 'forward-conf':
             ConsoleHelper.forward_conf(args.configuration_path)
         if args.net_command == 'reforward-conf':

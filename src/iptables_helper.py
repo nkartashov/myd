@@ -5,29 +5,33 @@ import logging
 
 
 class IptablesHelper(object):
-    RULE_TEMPLATE = 'sudo iptables -t nat {4} PREROUTING -i {0} -p tcp --dport {1} -j DNAT --to {2}:{3}'
+    RULE_TEMPLATE = 'sudo iptables -t nat {4} PREROUTING -i {0} -p tcp --dport {1} -j DNAT --to {2}:{3} -s {5}'
     ADD = '-A'
     DELETE = '-D'
     CHECK = '-C'
 
     @staticmethod
-    def forward_port(to_ip, to_port, host_port, host_interface, check=True):
-        add_cmd = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port, IptablesHelper.ADD)
-        if check and not IptablesHelper.check_if_rule_exists(to_ip, to_port, host_port, host_interface) or not check:
-            call(add_cmd, shell=True)
-            logging.info('Added rule: ' + add_cmd)
+    def forward_port(to_ip, to_port, host_port, host_interface, src, check=True):
+        add_command = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port, IptablesHelper.ADD,
+                                                          src)
+        if check and not IptablesHelper.check_if_rule_exists(to_ip, to_port, host_port, host_interface,
+                                                             src) or not check:
+            call(add_command, shell=True)
+            logging.info('Added rule: ' + add_command)
         else:
             logging.info('No rule was added due to checking enabled')
 
     @staticmethod
-    def unforward_port(to_ip, to_port, host_port, host_interface):
-        delete_cmd = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port,
-                                                         IptablesHelper.DELETE)
-        call(delete_cmd, shell=True)
-        logging.info('Removed rule: ' + delete_cmd)
+    def unforward_port(to_ip, to_port, host_port, host_interface, src):
+        delete_command = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port,
+                                                             IptablesHelper.DELETE, src)
+        call(delete_command, shell=True)
+        logging.info('Removed rule: ' + delete_command)
 
     @staticmethod
-    def check_if_rule_exists(to_ip, to_port, host_port, host_interface):
-        check_cmd = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port, IptablesHelper.CHECK)
-        return call(check_cmd, stdout=DEVNULL, stderr=DEVNULL, shell=True) == 0
+    def check_if_rule_exists(to_ip, to_port, host_port, host_interface, src):
+        check_command = IptablesHelper.RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port,
+                                                            IptablesHelper.CHECK,
+                                                            src)
+        return call(check_command, stdout=DEVNULL, stderr=DEVNULL, shell=True) == 0
 

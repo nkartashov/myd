@@ -24,12 +24,12 @@ class ConsoleHelper(object):
             print(config_file.read())
 
     @staticmethod
-    def forward_port(container_ip, container_port, host_port, host_interface='eth0'):
-        IptablesHelper.forward_port(container_ip, container_port, host_port, host_interface)
+    def forward_port(container_ip, container_port, host_port, host_interface='eth0', src='0/0'):
+        IptablesHelper.forward_port(container_ip, container_port, host_port, host_interface, src)
 
     @staticmethod
-    def unforward_port(container_ip, container_port, host_port, host_interface='eth0'):
-        IptablesHelper.unforward_port(container_ip, container_port, host_port, host_interface)
+    def unforward_port(container_ip, container_port, host_port, host_interface='eth0', src='0/0'):
+        IptablesHelper.unforward_port(container_ip, container_port, host_port, host_interface, src)
 
     @staticmethod
     def forward_conf(configuration_path, reforward_ip=None):
