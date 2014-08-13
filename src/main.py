@@ -4,7 +4,7 @@ __author__ = 'nikita_kartashov'
 from argparse import ArgumentParser
 import logging
 
-from lxc_helper import LxcHelper
+from lxc_container_management.lxc_helper import LxcHelper
 from console_helper import ConsoleHelper
 from config import Config
 
@@ -53,6 +53,12 @@ if __name__ == "__main__":
                                        help='Path to the configuration file')
     reforward_conf_parser.add_argument('-cip', '--container-ip', required=True,
                                        help='Container to reforward ports to ip')
+    config_parser = program_subparsers.add_parser('config', help='Operations with container config')
+    config_parser.add_argument('-n', '--name', required=True)
+    config_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                               help='Flag if the container is unprivileged')
+    config_subparsers = config_parser.add_subparsers(help='', dest='config_command')
+    config_print_parser = config_subparsers.add_parser('print', help='Prints config file of a given container')
 
     patch_parser = net_parser_subparsers.add_parser('patch')
     patch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be patched')
@@ -105,8 +111,9 @@ if __name__ == "__main__":
             ConsoleHelper.patch_container_config(args.name, args.static_ip)
         if args.net_command == 'unpatch':
             ConsoleHelper.unpatch_container_config(args.name)
-    if args.command == 'config-print':
-        ConsoleHelper.print_config_file(args.name, args.unprivileged)
+    if args.command == 'config':
+        if args.config_command == 'print':
+            ConsoleHelper.print_config_file(args.name, args.unprivileged)
     if args.command == 'history':
         if args.history_command == 'print':
             history = Config.history()

@@ -9,19 +9,21 @@ from getpass import getuser
 
 from config import Config
 from iptables_helper import IptablesHelper
+from lxc_container_management.lxc_config import LxcConfig
 from utils.func_tools import fst, snd
 from utils.string_utils import split_to_function
 
 
 class ConsoleHelper(object):
-    LXC_IP_LINE = 'lxc.network.ipv4 '
+    LXC_IP_KEY = 'lxc.network.ipv4'
+    LXC_ID_MAP_KEY = 'lxc.id_map'
 
     @staticmethod
     def print_config_file(container_name, unprivileged=False):
         config_file_path = Config.unprivileged_container_config_path(container_name) \
             if unprivileged else Config.privileged_container_config_path(container_name)
-        with open(config_file_path, 'r') as config_file:
-            print(config_file.read())
+        with LxcConfig(config_file_path) as config_file:
+            config_file.print()
 
     @staticmethod
     def forward_port(container_ip, container_port, host_port, host_interface, src):
@@ -46,25 +48,22 @@ class ConsoleHelper(object):
     @staticmethod
     def patch_container_config(container_name, static_ip):
         config_file_path = Config.privileged_container_config_path(container_name)
-        with open(config_file_path, 'r') as config_file:
-            if any(ConsoleHelper.LXC_IP_LINE in line for line in config_file.readlines()):
+        with LxcConfig(config_file_path) as config_file:
+            if config_file[ConsoleHelper.LXC_IP_KEY]:
                 logging.error('Config file has already been patched')
                 return
-        with open(config_file_path, 'a') as config_file:
-            config_file.write('{0} = {1}\n'.format(ConsoleHelper.LXC_IP_LINE, static_ip))
-        logging.info('Patched container {0} config'.format(container_name))
+            config_file.set_value(ConsoleHelper.LXC_IP_KEY, static_ip)
+            logging.info('Patched container {0} config'.format(container_name))
 
     @staticmethod
     def unpatch_container_config(container_name):
         config_file_path = Config.privileged_container_config_path(container_name)
-        with open(config_file_path, 'r') as config_file:
-            lines_for_patching = [(line, ConsoleHelper.LXC_IP_LINE in line) for line in config_file.readlines()]
-        if not any(map(snd, lines_for_patching)):
-            logging.error('Config file has not been patched')
-            return
-        with open(config_file_path, 'w') as config_file:
-            config_file.writelines(line for line, flag_to_remove in lines_for_patching if not flag_to_remove)
-        logging.info('Config file for container {0} patched'.format(container_name))
+        with LxcConfig(config_file_path) as config_file:
+            if not config_file[ConsoleHelper.LXC_IP_KEY]:
+                logging.error('Config file has not been patched')
+                return
+            config_file.erase_values(ConsoleHelper.LXC_IP_KEY)
+            logging.info('Config file for container {0} patched'.format(container_name))
 
     @staticmethod
     def __assign_uids_to_user(ids_start, ids_stop, user='$USER'):
@@ -85,6 +84,10 @@ class ConsoleHelper(object):
             makedirs(d, exist_ok=True)
 
     @staticmethod
+    def __make_home_dir_executable():
+        call('sudo chmod +x $HOME', shell=True)
+
+    @staticmethod
     def prepare_unprivileged_config(uid_string, gid_string):
         def split_uids_guids(input_string):
             return split_to_function(input_string, '-', int)
@@ -96,14 +99,14 @@ class ConsoleHelper(object):
         user = getuser()
         ConsoleHelper.__assign_uids_to_user(uid_start, uid_stop, user)
         ConsoleHelper.__assign_gids_to_user(gid_start, gid_stop, user)
-        call('sudo chmod +x $HOME', shell=True)
+        ConsoleHelper.__make_home_dir_executable()
         Config.create_dirs_for_unprivileged_container()
         if not path.exists(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH):
             copyfile(Config.default_unprivileged_config_resource_path(),
                      Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH)
-            with open(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH, 'a') as config_file:
-                config_file.write('\nlxc.id_map = u 0 {0} {1}'.format(uid_start, uid_count))
-                config_file.write('\nlxc.id_map = g 0 {0} {1}'.format(gid_start, gid_count))
+            with LxcConfig(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH) as config_file:
+                config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'u 0 {0} {1}'.format(uid_start, uid_count))
+                config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'g 0 {0} {1}'.format(gid_start, gid_count))
         call('echo ' + '"{0} veth lxcbr0 10"'.format(user) +
              ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'), shell=True)
         logging.info('Prepared uids {0} and gids {1} for unprivileged usage'.
