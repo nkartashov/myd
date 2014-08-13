@@ -47,6 +47,12 @@ class Config(object):
         return path.join(path.join(Config.UNPRIVILEGED_LXC_PATH, container_name), 'config')
 
     @staticmethod
+    def container_config_path(name, unprivileged):
+        if unprivileged:
+            return Config.unprivileged_container_config_path(name)
+        return Config.privileged_container_config_path(name)
+
+    @staticmethod
     def history_file_path():
         return path.join(Config.APP_PATH, Config.HISTORY_FILENAME)
 

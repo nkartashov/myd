@@ -13,7 +13,8 @@ class LxcConfig(object):
     def __parse(self, filename):
         with open(filename) as config_file:
             for line in config_file.readlines():
-                if line.startswith('#'):
+                line = line.strip()
+                if not line or line.startswith('#'):
                     continue
                 value_pair = LxcConfig.__process_line(line)
                 self.__append_property_value(*value_pair)

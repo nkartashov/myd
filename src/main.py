@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import logging
 
 from lxc_container_management.lxc_helper import LxcHelper
+from iptables_helper import IptablesHelper
 from console_helper import ConsoleHelper
 from config import Config
 
@@ -60,6 +61,10 @@ if __name__ == "__main__":
     config_subparsers = config_parser.add_subparsers(help='', dest='config_command')
     config_print_parser = config_subparsers.add_parser('print', help='Prints config file of a given container')
 
+    config_add_parser = config_subparsers.add_parser('add', help='Adds a property to container config')
+    config_add_parser.add_argument('-k', '--key', required=True, help='Property key')
+    config_add_parser.add_argument('-v', '--value', required=True, help='Property value')
+
     patch_parser = net_parser_subparsers.add_parser('patch')
     patch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be patched')
     patch_parser.add_argument('-sip', '--static-ip', required=True, help='Static ip in the form a.b.c.d/e, like'
@@ -67,11 +72,6 @@ if __name__ == "__main__":
 
     unpatch_parser = net_parser_subparsers.add_parser('unpatch')
     unpatch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be unpatched')
-
-    config_print_parser = program_subparsers.add_parser('config-print', help='Prints config file of a given container')
-    config_print_parser.add_argument('-n', '--name', required=True, help='Name of the container which config to print')
-    config_print_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
-                                     help='Flag if the container is unprivileged')
 
     history_parser = program_subparsers.add_parser('history', help='Commands concerning history')
     history_subparsers = history_parser.add_subparsers(help='', dest='history_command')
@@ -101,8 +101,8 @@ if __name__ == "__main__":
 
     if args.command == 'net':
         if args.net_command == 'forward':
-            ConsoleHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface,
-                                       args.source_ip)
+            IptablesHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface,
+                                        args.source_ip)
         if args.net_command == 'forward-conf':
             ConsoleHelper.forward_conf(args.configuration_path)
         if args.net_command == 'reforward-conf':
@@ -114,6 +114,8 @@ if __name__ == "__main__":
     if args.command == 'config':
         if args.config_command == 'print':
             ConsoleHelper.print_config_file(args.name, args.unprivileged)
+        if args.config_command == 'add':
+            LxcHelper.config_add_property(args.name, args.key, args.value, args.unprivileged)
     if args.command == 'history':
         if args.history_command == 'print':
             history = Config.history()

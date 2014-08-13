@@ -3,6 +3,7 @@ __author__ = 'nikita_kartashov'
 from subprocess import call
 import logging
 from config import Config
+from lxc_container_management.lxc_config import LxcConfig
 
 
 class LxcHelper(object):
@@ -28,6 +29,12 @@ class LxcHelper(object):
         if call('sudo lxc-destroy -n {0}'.format(name), shell=True) == 0:
             LxcHelper.__remember_remove(name)
             logging.info('Removed container {0}'.format(name))
+
+    @staticmethod
+    def config_add_property(container_name, key, value, unprivileged=False):
+        config_file_path = Config.container_config_path(container_name, unprivileged)
+        with LxcConfig(config_file_path) as config_file:
+            config_file.append_value(key, value)
 
     @staticmethod
     def __remember_create(name):

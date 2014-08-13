@@ -6,11 +6,9 @@ from os import path, makedirs
 from subprocess import call
 from getpass import getuser
 
-
 from config import Config
 from iptables_helper import IptablesHelper
 from lxc_container_management.lxc_config import LxcConfig
-from utils.func_tools import fst, snd
 from utils.string_utils import split_to_function
 
 
@@ -20,14 +18,9 @@ class ConsoleHelper(object):
 
     @staticmethod
     def print_config_file(container_name, unprivileged=False):
-        config_file_path = Config.unprivileged_container_config_path(container_name) \
-            if unprivileged else Config.privileged_container_config_path(container_name)
+        config_file_path = Config.container_config_path(container_name, unprivileged)
         with LxcConfig(config_file_path) as config_file:
             config_file.print()
-
-    @staticmethod
-    def forward_port(container_ip, container_port, host_port, host_interface, src):
-        IptablesHelper.forward_port(container_ip, container_port, host_port, host_interface, src)
 
     @staticmethod
     def unforward_port(container_ip, container_port, host_port, host_interface, src):
@@ -47,7 +40,7 @@ class ConsoleHelper(object):
 
     @staticmethod
     def patch_container_config(container_name, static_ip):
-        config_file_path = Config.privileged_container_config_path(container_name)
+        config_file_path = Config.container_config_path(container_name, False)
         with LxcConfig(config_file_path) as config_file:
             if config_file[ConsoleHelper.LXC_IP_KEY]:
                 logging.error('Config file has already been patched')
@@ -57,7 +50,7 @@ class ConsoleHelper(object):
 
     @staticmethod
     def unpatch_container_config(container_name):
-        config_file_path = Config.privileged_container_config_path(container_name)
+        config_file_path = Config.container_config_path(container_name, False)
         with LxcConfig(config_file_path) as config_file:
             if not config_file[ConsoleHelper.LXC_IP_KEY]:
                 logging.error('Config file has not been patched')
