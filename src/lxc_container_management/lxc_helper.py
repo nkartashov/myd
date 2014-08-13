@@ -31,10 +31,16 @@ class LxcHelper(object):
             logging.info('Removed container {0}'.format(name))
 
     @staticmethod
-    def config_add_property(container_name, key, value, unprivileged=False):
+    def config_add_property(container_name, key, value, unprivileged):
         config_file_path = Config.container_config_path(container_name, unprivileged)
         with LxcConfig(config_file_path) as config_file:
             config_file.append_value(key, value)
+
+    @staticmethod
+    def config_erase_property(container_name, key, unprivileged):
+        config_file_path = Config.container_config_path(container_name, unprivileged)
+        with LxcConfig(config_file_path) as config_file:
+            config_file.erase_property(key)
 
     @staticmethod
     def __remember_create(name):

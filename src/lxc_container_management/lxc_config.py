@@ -45,7 +45,7 @@ class LxcConfig(object):
     def __getitem__(self, item):
         return self.__properties.get(item, [])
 
-    def erase_values(self, key):
+    def erase_property(self, key):
         self.__modified()
         self.__properties[key] = []
 

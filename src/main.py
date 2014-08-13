@@ -61,9 +61,12 @@ if __name__ == "__main__":
     config_subparsers = config_parser.add_subparsers(help='', dest='config_command')
     config_print_parser = config_subparsers.add_parser('print', help='Prints config file of a given container')
 
-    config_add_parser = config_subparsers.add_parser('add', help='Adds a property to container config')
-    config_add_parser.add_argument('-k', '--key', required=True, help='Property key')
-    config_add_parser.add_argument('-v', '--value', required=True, help='Property value')
+    config_property_add_parser = config_subparsers.add_parser('add', help='Adds a property to container config')
+    config_property_add_parser.add_argument('-k', '--key', required=True, help='Property key')
+    config_property_add_parser.add_argument('-v', '--value', required=True, help='Property value')
+
+    config_property_erase_parser = config_subparsers.add_parser('erase', help='Erases the property from contaner config')
+    config_property_erase_parser.add_argument('-k', '--key', required=True, help='Property key')
 
     patch_parser = net_parser_subparsers.add_parser('patch')
     patch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be patched')
@@ -116,6 +119,8 @@ if __name__ == "__main__":
             ConsoleHelper.print_config_file(args.name, args.unprivileged)
         if args.config_command == 'add':
             LxcHelper.config_add_property(args.name, args.key, args.value, args.unprivileged)
+        if args.config_command == 'erase':
+            LxcHelper.config_erase_property(args.name, args.key, args.unprivileged)
     if args.command == 'history':
         if args.history_command == 'print':
             history = Config.history()

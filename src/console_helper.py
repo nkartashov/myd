@@ -55,7 +55,7 @@ class ConsoleHelper(object):
             if not config_file[ConsoleHelper.LXC_IP_KEY]:
                 logging.error('Config file has not been patched')
                 return
-            config_file.erase_values(ConsoleHelper.LXC_IP_KEY)
+            config_file.erase_property(ConsoleHelper.LXC_IP_KEY)
             logging.info('Config file for container {0} patched'.format(container_name))
 
     @staticmethod
