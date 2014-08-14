@@ -33,13 +33,15 @@ if __name__ == "__main__":
 
     net_parser = program_subparsers.add_parser('net', help='Working with networking')
     net_parser_subparsers = net_parser.add_subparsers(help='', dest='net_command')
-    forward_parser = net_parser_subparsers.add_parser('forward',
-                                                      help='Forwards ports of a host machine to the container')
-    forward_parser.add_argument('-cip', '--container-ip', required=True, help='Container ip')
-    forward_parser.add_argument('-cp', '--container-port', required=True, help='Container port')
-    forward_parser.add_argument('-hp', '--host-port', required=True, help='Host port')
-    forward_parser.add_argument('-hi', '--host-interface', default='eth0', help='Host interface, default is eth0')
-    forward_parser.add_argument('-s', '--source-ip', default='0/0', help='Ip from which packets get forwarded')
+    forward_port_parser = net_parser_subparsers.add_parser('forward',
+                                                           help='Forwards ports of a host machine to the container')
+    forward_port_parser.add_argument('-cip', '--container-ip', required=True, help='Container ip')
+    forward_port_parser.add_argument('-cp', '--container-port', required=True, help='Container port')
+    forward_port_parser.add_argument('-hp', '--host-port', required=True, help='Host port')
+    forward_port_parser.add_argument('-hi', '--host-interface', default='eth0', help='Host interface, default is eth0')
+    forward_port_parser.add_argument('-s', '--source-ip', default='0/0', help='Ip from which packets get forwarded')
+    forward_port_parser.add_argument('-un', '--unforward', action='store_true', default=False,
+                                     help='Unforwards forwarded port config')
 
     forward_conf_parser = net_parser_subparsers.add_parser('forward-conf',
                                                            help='Forwards ports of a host machine to the container'
@@ -65,7 +67,8 @@ if __name__ == "__main__":
     config_property_add_parser.add_argument('-k', '--key', required=True, help='Property key')
     config_property_add_parser.add_argument('-v', '--value', required=True, help='Property value')
 
-    config_property_erase_parser = config_subparsers.add_parser('erase', help='Erases the property from contaner config')
+    config_property_erase_parser = config_subparsers.add_parser('erase',
+                                                                help='Erases the property from contaner config')
     config_property_erase_parser.add_argument('-k', '--key', required=True, help='Property key')
 
     patch_parser = net_parser_subparsers.add_parser('patch')
@@ -104,8 +107,13 @@ if __name__ == "__main__":
 
     if args.command == 'net':
         if args.net_command == 'forward':
-            IptablesHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface,
-                                        args.source_ip)
+            if args.unforward:
+                IptablesHelper.unforward_port(args.container_ip, args.container_port, args.host_port,
+                                              args.host_interface,
+                                              args.source_ip)
+            else:
+                IptablesHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface,
+                                            args.source_ip)
         if args.net_command == 'forward-conf':
             ConsoleHelper.forward_conf(args.configuration_path)
         if args.net_command == 'reforward-conf':

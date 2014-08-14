@@ -7,6 +7,7 @@ from subprocess import call
 from getpass import getuser
 
 from config import Config
+from utils.error_handling import log_print_error, no_config_found_message
 from iptables_helper import IptablesHelper
 from lxc_container_management.lxc_config import LxcConfig
 from utils.string_utils import split_to_function
@@ -19,12 +20,11 @@ class ConsoleHelper(object):
     @staticmethod
     def print_config_file(container_name, unprivileged=False):
         config_file_path = Config.container_config_path(container_name, unprivileged)
-        with LxcConfig(config_file_path) as config_file:
-            config_file.print()
-
-    @staticmethod
-    def unforward_port(container_ip, container_port, host_port, host_interface, src):
-        IptablesHelper.unforward_port(container_ip, container_port, host_port, host_interface, src)
+        try:
+            with LxcConfig(config_file_path) as config_file:
+                config_file.print()
+        except FileNotFoundError:
+            log_print_error(no_config_found_message(container_name, config_file_path))
 
     @staticmethod
     def forward_conf(configuration_path, reforward_ip=None):
@@ -41,22 +41,28 @@ class ConsoleHelper(object):
     @staticmethod
     def patch_container_config(container_name, static_ip):
         config_file_path = Config.container_config_path(container_name, False)
-        with LxcConfig(config_file_path) as config_file:
-            if config_file[ConsoleHelper.LXC_IP_KEY]:
-                logging.error('Config file has already been patched')
-                return
-            config_file.set_value(ConsoleHelper.LXC_IP_KEY, static_ip)
-            logging.info('Patched container {0} config'.format(container_name))
+        try:
+            with LxcConfig(config_file_path) as config_file:
+                if config_file[ConsoleHelper.LXC_IP_KEY]:
+                    log_print_error('Config file has already been patched')
+                    return
+                config_file.set_value(ConsoleHelper.LXC_IP_KEY, static_ip)
+                logging.info('Patched container {0} config'.format(container_name))
+        except FileNotFoundError:
+            log_print_error(no_config_found_message(container_name, config_file_path))
 
     @staticmethod
     def unpatch_container_config(container_name):
         config_file_path = Config.container_config_path(container_name, False)
-        with LxcConfig(config_file_path) as config_file:
-            if not config_file[ConsoleHelper.LXC_IP_KEY]:
-                logging.error('Config file has not been patched')
-                return
-            config_file.erase_property(ConsoleHelper.LXC_IP_KEY)
-            logging.info('Config file for container {0} patched'.format(container_name))
+        try:
+            with LxcConfig(config_file_path) as config_file:
+                if not config_file[ConsoleHelper.LXC_IP_KEY]:
+                    log_print_error('Config file has not been patched')
+                    return
+                config_file.erase_property(ConsoleHelper.LXC_IP_KEY)
+                logging.info('Config file for container {0} patched'.format(container_name))
+        except FileNotFoundError:
+            log_print_error('No config for container {0} at {1}'.format(container_name, config_file_path))
 
     @staticmethod
     def __assign_uids_to_user(ids_start, ids_stop, user='$USER'):
@@ -67,14 +73,14 @@ class ConsoleHelper(object):
         call('sudo usermod --add-subgids {0}-{1} {2}'.format(ids_start, ids_stop, user), shell=True)
 
     @staticmethod
-    def ensure_unprivileged_dirs_exist():
+    def __ensure_unprivileged_dirs_exist():
         dirs = ('~/.config/lxc/',
                 '~/.local/share/lxc',
                 '~/.local/share/lxcsnaps',
                 '~/.cache/lxc')
-        expanded_dirs = map(path.expanduser, dirs)
-        for d in expanded_dirs:
-            makedirs(d, exist_ok=True)
+        expanded_directories = map(path.expanduser, dirs)
+        for directory in expanded_directories:
+            makedirs(directory, exist_ok=True)
 
     @staticmethod
     def __make_home_dir_executable():
@@ -84,7 +90,7 @@ class ConsoleHelper(object):
     def prepare_unprivileged_config(uid_string, gid_string):
         def split_uids_guids(input_string):
             return split_to_function(input_string, '-', int)
-        ConsoleHelper.ensure_unprivileged_dirs_exist()
+        ConsoleHelper.__ensure_unprivileged_dirs_exist()
         uid_start, uid_stop = split_uids_guids(uid_string)
         gid_start, gid_stop = split_uids_guids(gid_string)
         uid_count = uid_stop - uid_start
