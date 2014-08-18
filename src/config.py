@@ -30,13 +30,25 @@ class Config(object):
 
     @staticmethod
     def start_log():
+        log_file = Config.__log_name(create=True)
+        if not path.exists(log_file):
+            os.open(log_file, os.O_CREAT, 0o755)
+        logging.basicConfig(filename=log_file, level=logging.DEBUG)
+
+    @staticmethod
+    def read_log():
+        log_name = Config.__log_name()
+        if not log_name:
+            return 'No log yet'
+        with open(log_name) as log_file:
+            return log_file.read()
+
+    @staticmethod
+    def __log_name(create=False):
         Config.ensure_app_path_exists()
         log_file_list = glob(path.join(Config.APP_PATH, '*.log'))
-        log_file = log_file_list[0] if log_file_list else \
-            path.join(Config.APP_PATH, str(datetime.now()) + '.log')
-        if not path.exists(log_file):
-            os.open(log_file, os.O_CREAT, 0o777)
-        logging.basicConfig(filename=log_file, level=logging.DEBUG)
+        return log_file_list[0] if log_file_list else \
+            path.join(Config.APP_PATH, str(datetime.now()) + '.log') if create else None
 
     @staticmethod
     def privileged_container_config_path(container_name):
@@ -81,7 +93,6 @@ class Config(object):
             message_to_return = 'Unable to remove history from {0}'.format(Config.history_file_path())
         logging.info(message_to_return)
         return message_to_return
-
 
     @staticmethod
     def wipe():

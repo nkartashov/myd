@@ -50,12 +50,13 @@ if __name__ == "__main__":
                                      help='Path to the configuration file')
 
     reforward_conf_parser = net_parser_subparsers.add_parser('reforward-conf',
-                                                             help='Reforwards ports forwarded using configuration'
+                                                             help='Reforwards ports forwarded using configuration '
                                                                   'to another container with ip')
     reforward_conf_parser.add_argument('-conf', '--configuration-path', required=True,
                                        help='Path to the configuration file')
     reforward_conf_parser.add_argument('-cip', '--container-ip', required=True,
                                        help='Container to reforward ports to ip')
+
     config_parser = program_subparsers.add_parser('config', help='Operations with container config')
     config_parser.add_argument('-n', '--name', required=True)
     config_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
@@ -68,15 +69,16 @@ if __name__ == "__main__":
     config_property_add_parser.add_argument('-v', '--value', required=True, help='Property value')
 
     config_property_erase_parser = config_subparsers.add_parser('erase',
-                                                                help='Erases the property from contaner config')
+                                                                help='Erases the property from container config')
     config_property_erase_parser.add_argument('-k', '--key', required=True, help='Property key')
 
-    patch_parser = net_parser_subparsers.add_parser('patch')
+    patch_parser = config_subparsers.add_parser('patch-ip', help='Adds the line with static ip to a container config')
     patch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be patched')
     patch_parser.add_argument('-sip', '--static-ip', required=True, help='Static ip in the form a.b.c.d/e, like'
                                                                          '10.0.3.100/24')
 
-    unpatch_parser = net_parser_subparsers.add_parser('unpatch')
+    unpatch_parser = config_subparsers.add_parser('unpatch-ip',
+                                                  help='Removes the line with static ip from a container config')
     unpatch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be unpatched')
 
     history_parser = program_subparsers.add_parser('history', help='Commands concerning history')
@@ -93,6 +95,8 @@ if __name__ == "__main__":
                                              help='User ids in the format START-END')
     prepare_unprivileged_parser.add_argument('-gids', '--group-ids', required=True,
                                              help='User ids in the format START-END')
+
+    print_log_parser = program_subparsers.add_parser('print-log', help='Prints the log of the program')
 
     args = program_parser.parse_args()
     Config.start_log()
@@ -143,3 +147,5 @@ if __name__ == "__main__":
         Config.wipe()
     if args.command == 'prepare-unprivileged':
         ConsoleHelper.prepare_unprivileged_config(args.user_ids, args.group_ids)
+    if args.command == 'print-log':
+        print(Config.read_log())
