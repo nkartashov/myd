@@ -17,6 +17,8 @@ class ConsoleHelper(object):
     LXC_IP_KEY = 'lxc.network.ipv4'
     LXC_ID_MAP_KEY = 'lxc.id_map'
 
+    FORWARD_ARGUMENT_NUMBER = 5
+
     @staticmethod
     def print_config_file(container_name, unprivileged=False):
         config_file_path = Config.container_config_path(container_name, unprivileged)
@@ -27,16 +29,27 @@ class ConsoleHelper(object):
             log_print_error(no_config_found_message(container_name, config_file_path))
 
     @staticmethod
-    def forward_conf(configuration_path, reforward_ip=None):
+    def __transform_string_into_forward_args(string):
+        args = string.split()
+        if len(args) < ConsoleHelper.FORWARD_ARGUMENT_NUMBER:
+            args.append('0/0')
+        return args
+
+    @staticmethod
+    def forward_conf(configuration_path, unforward=False, reforward_ip=None):
         with open(configuration_path, 'r') as configuration_file:
             for line in configuration_file.readlines():
-                if line.startswith('#'):
+                line = line.strip()
+                if not line or line.startswith('#'):
                     continue
-                forward_args = line.split()
+                forward_args = ConsoleHelper.__transform_string_into_forward_args(line)
                 if reforward_ip:
                     IptablesHelper.unforward_port(*forward_args)
                     forward_args[0] = reforward_ip
-                IptablesHelper.forward_port(*forward_args)
+                if unforward:
+                    IptablesHelper.unforward_port(*forward_args)
+                else:
+                    IptablesHelper.forward_port(*forward_args)
 
     @staticmethod
     def patch_container_config(container_name, static_ip):

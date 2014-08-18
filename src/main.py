@@ -51,11 +51,21 @@ if __name__ == "__main__":
     forward_port_parser.add_argument('-un', '--unforward', action='store_true', default=False,
                                      help='Unforwards forwarded port config')
 
+    full_forward_parser = net_parser_subparsers.add_parser('full-forward',
+                                                           help='Forwards all traffic from the interface to a container')
+    full_forward_parser.add_argument('-cip', '--container-ip', required=True, help='Container ip')
+    full_forward_parser.add_argument('-hi', '--host-interface', default='eth0', help='Host interface, default is eth0')
+    full_forward_parser.add_argument('-s', '--source-ip', default='0/0', help='Ip from which packets get forwarded')
+    full_forward_parser.add_argument('-un', '--unforward', action='store_true', default=False,
+                                     help='Unforwards forwarded config')
+
     forward_conf_parser = net_parser_subparsers.add_parser('forward-conf',
                                                            help='Forwards ports of a host machine to the container'
                                                                 'using the configuration provided')
     forward_conf_parser.add_argument('-conf', '--configuration-path', required=True,
                                      help='Path to the configuration file')
+    forward_conf_parser.add_argument('-un', '--unforward', action='store_true', default=False,
+                                     help='Unforwards forwarded port configuration')
 
     reforward_conf_parser = net_parser_subparsers.add_parser('reforward-conf',
                                                              help='Reforwards ports forwarded using configuration '
@@ -125,6 +135,11 @@ if __name__ == "__main__":
             else:
                 IptablesHelper.forward_port(args.container_ip, args.container_port, args.host_port, args.host_interface,
                                             args.source_ip)
+        if args.net_command == 'full-forward':
+            if args.unforward:
+                IptablesHelper.full_unforward(args.container_ip, args.host_interface, args.source_ip)
+            else:
+                IptablesHelper.full_forward(args.container_ip, args.host_interface, args.source_ip)
         if args.net_command == 'forward-conf':
             ConsoleHelper.forward_conf(args.configuration_path)
         if args.net_command == 'reforward-conf':
