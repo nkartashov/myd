@@ -1,11 +1,11 @@
 __author__ = 'nikita_kartashov'
 
-from utils.func_tools import fst, snd
+from collections import OrderedDict
 
 
 class LxcConfig(object):
     def __init__(self, filename):
-        self.__properties = {}
+        self.__properties = OrderedDict()
         self.__filename = filename
         self.__has_been_modified = False
         self.__parse(filename)

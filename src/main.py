@@ -27,6 +27,14 @@ if __name__ == "__main__":
     copy_parser = program_subparsers.add_parser('copy', help='Copies a given container')
     copy_parser.add_argument('-o', '--original-name', required=True, help='Name of the ORIGINAL container')
     copy_parser.add_argument('-n', '--new-name', required=True, help='Name of the NEW container')
+    copy_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                             help='Flag if you want the copy of an unprivileged container')
+
+    list_parser = program_subparsers.add_parser('list', help='Lists all existing containers')
+    list_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                             help='Flag if you want the list of unprivileged containers')
+    list_parser.add_argument('-nf', '--not-fancy', default=False, action='store_true',
+                             help='Flag if you want to see containers in the less fancy, less informative way')
 
     remove_parser = program_subparsers.add_parser('remove', help='Removes a given container')
     remove_parser.add_argument('-n', '--name', required=True, help='Name of the container to be removed')
@@ -73,13 +81,11 @@ if __name__ == "__main__":
     config_property_erase_parser.add_argument('-k', '--key', required=True, help='Property key')
 
     patch_parser = config_subparsers.add_parser('patch-ip', help='Adds the line with static ip to a container config')
-    patch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be patched')
     patch_parser.add_argument('-sip', '--static-ip', required=True, help='Static ip in the form a.b.c.d/e, like'
                                                                          '10.0.3.100/24')
 
     unpatch_parser = config_subparsers.add_parser('unpatch-ip',
                                                   help='Removes the line with static ip from a container config')
-    unpatch_parser.add_argument('-n', '--name', required=True, help='Name of the container to be unpatched')
 
     history_parser = program_subparsers.add_parser('history', help='Commands concerning history')
     history_subparsers = history_parser.add_subparsers(help='', dest='history_command')
@@ -105,10 +111,11 @@ if __name__ == "__main__":
         LxcHelper.create_call(args.name, args.backing_store, args.distro, args.release, args.architecture,
                               args.unprivileged)
     if args.command == 'copy':
-        LxcHelper.copy_call(args.original_name, args.new_name)
+        LxcHelper.copy_call(args.original_name, args.new_name, args.unprivileged)
+    if args.command == 'list':
+        LxcHelper.list_call(args.not_fancy, args.unprivileged)
     if args.command == 'remove':
         LxcHelper.remove_call(args.name)
-
     if args.command == 'net':
         if args.net_command == 'forward':
             if args.unforward:
@@ -122,11 +129,11 @@ if __name__ == "__main__":
             ConsoleHelper.forward_conf(args.configuration_path)
         if args.net_command == 'reforward-conf':
             ConsoleHelper.forward_conf(args.configuration_path, args.container_ip)
-        if args.net_command == 'patch':
-            ConsoleHelper.patch_container_config(args.name, args.static_ip)
-        if args.net_command == 'unpatch':
-            ConsoleHelper.unpatch_container_config(args.name)
     if args.command == 'config':
+        if args.config_command == 'patch-ip':
+            ConsoleHelper.patch_container_config(args.name, args.static_ip)
+        if args.config_command == 'unpatch-ip':
+            ConsoleHelper.unpatch_container_config(args.name)
         if args.config_command == 'print':
             ConsoleHelper.print_config_file(args.name, args.unprivileged)
         if args.config_command == 'add':

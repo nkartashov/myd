@@ -9,8 +9,8 @@ from lxc_container_management.lxc_config import LxcConfig
 class LxcHelper(object):
     @staticmethod
     def create_call(name, backing_store, distro, release, arch, unprivileged=False):
-        privileged_string = "sudo " if not unprivileged else ""
-        command = privileged_string + "lxc-create -n {0} -B {1} -t download -- -d {2} -r {3} -a {4}". \
+        privilege_string = "sudo " if not unprivileged else ""
+        command = privilege_string + 'lxc-create -n {0} -B {1} -t download -- -d {2} -r {3} -a {4}'. \
             format(name, backing_store, distro, release, arch)
         if call(command, shell=True) == 0:
             LxcHelper.__remember_create(name)
@@ -19,10 +19,18 @@ class LxcHelper(object):
                                 'privileged' if not unprivileged else 'unprivileged'))
 
     @staticmethod
-    def copy_call(original_name, new_name):
-        if call('sudo lxc-clone -s -o {0} -n {1}'.format(original_name, new_name), shell=True) == 0:
+    def copy_call(original_name, new_name, unprivileged):
+        privilege_string = "sudo " if not unprivileged else ""
+        command = privilege_string + 'lxc-clone -s -o {0} -n {1}'.format(original_name, new_name)
+        if call(command, shell=True) == 0:
             LxcHelper.__remember_copy(original_name, new_name)
             logging.info('Made a snapshot of {0} into {1}'.format(original_name, new_name))
+
+    @staticmethod
+    def list_call(not_fancy, unprivileged):
+        privilege_string = 'sudo ' if not unprivileged else ""
+        command = privilege_string + 'lxc-ls {0}'.format('' if not_fancy else '-f')
+        call(command, shell=True)
 
     @staticmethod
     def remove_call(name):
