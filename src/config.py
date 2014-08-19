@@ -25,6 +25,10 @@ class Config(object):
     UNPRIVILEGED_CONTAINER_CONFIG_PATH = DEFAULT_UNPRIVILEGED_CONTAINER_CONFIG_PATH
 
     @staticmethod
+    def lxc_backing_store_path(unprivileged):
+        return Config.UNPRIVILEGED_LXC_PATH if unprivileged else Config.LXC_PATH
+
+    @staticmethod
     def ensure_app_path_exists():
         os.makedirs(Config.APP_PATH, exist_ok=True)
 

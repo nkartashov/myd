@@ -103,6 +103,7 @@ class ConsoleHelper(object):
     def prepare_unprivileged_config(uid_string, gid_string):
         def split_uids_guids(input_string):
             return split_to_function(input_string, '-', int)
+
         ConsoleHelper.__ensure_unprivileged_dirs_exist()
         uid_start, uid_stop = split_uids_guids(uid_string)
         gid_start, gid_stop = split_uids_guids(gid_string)
@@ -123,3 +124,9 @@ class ConsoleHelper(object):
              ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'), shell=True)
         logging.info('Prepared uids {0} and gids {1} for unprivileged usage'.
                      format(uid_string, gid_string))
+
+    @staticmethod
+    def mount_backing_store_device(device, filesystem, unprivileged):
+        mount_path = Config.lxc_backing_store_path(unprivileged)
+        makedirs(mount_path, exist_ok=True)
+        call('sudo mount -t {0} {1} {2}'.format(filesystem, device, mount_path), shell=True)

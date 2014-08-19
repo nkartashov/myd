@@ -112,6 +112,12 @@ if __name__ == "__main__":
     prepare_unprivileged_parser.add_argument('-gids', '--group-ids', required=True,
                                              help='User ids in the format START-END')
 
+    mount_parser = program_subparsers.add_parser('mount', help='Mounts the specified device into a given path')
+    mount_parser.add_argument('-d', '--device', required=True, help='Device to mount')
+    mount_parser.add_argument('-fs', '--filesystem', default='btrfs', help='The filesystem to mount')
+    mount_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                              help='Flag if the mounting is for unprivileged containers')
+
     print_log_parser = program_subparsers.add_parser('print-log', help='Prints the log of the program')
 
     args = program_parser.parse_args()
@@ -169,5 +175,7 @@ if __name__ == "__main__":
         Config.wipe()
     if args.command == 'prepare-unprivileged':
         ConsoleHelper.prepare_unprivileged_config(args.user_ids, args.group_ids)
+    if args.command == 'mount':
+        ConsoleHelper.mount_backing_store_device(args.device, args.filesystem, args.unprivileged)
     if args.command == 'print-log':
         print(Config.read_log())
