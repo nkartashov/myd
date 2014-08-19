@@ -38,6 +38,8 @@ if __name__ == "__main__":
 
     remove_parser = program_subparsers.add_parser('remove', help='Removes a given container')
     remove_parser.add_argument('-n', '--name', required=True, help='Name of the container to be removed')
+    remove_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
+                               help='Flag if you want to remove an unprivileged container')
 
     net_parser = program_subparsers.add_parser('net', help='Working with networking')
     net_parser_subparsers = net_parser.add_subparsers(help='', dest='net_command')
@@ -131,7 +133,7 @@ if __name__ == "__main__":
     if args.command == 'list':
         LxcHelper.list_call(args.not_fancy, args.unprivileged)
     if args.command == 'remove':
-        LxcHelper.remove_call(args.name)
+        LxcHelper.remove_call(args.name, args.unprivileged)
     if args.command == 'net':
         if args.net_command == 'forward':
             if args.unforward:
