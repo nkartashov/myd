@@ -77,6 +77,10 @@ if __name__ == "__main__":
     reforward_conf_parser.add_argument('-cip', '--container-ip', required=True,
                                        help='Container to reforward ports to ip')
 
+    flush_parser = net_parser_subparsers.add_parser('flush', help='Flushes the iptables rules made before')
+
+    net_list_parser = net_parser_subparsers.add_parser('list', help='Lists the iptables rules made before')
+
     config_parser = program_subparsers.add_parser('config', help='Operations with container config')
     config_parser.add_argument('-n', '--name', required=True)
     config_parser.add_argument('-up', '--unprivileged', default=False, action='store_true',
@@ -152,6 +156,10 @@ if __name__ == "__main__":
             ConsoleHelper.forward_conf(args.configuration_path)
         if args.net_command == 'reforward-conf':
             ConsoleHelper.forward_conf(args.configuration_path, args.container_ip)
+        if args.net_command == 'flush':
+            IptablesHelper.flush()
+        if args.net_command == 'list':
+            IptablesHelper.list()
     if args.command == 'config':
         if args.config_command == 'patch-ip':
             ConsoleHelper.patch_container_config(args.name, args.static_ip)

@@ -5,9 +5,13 @@ import logging
 
 
 class IptablesHelper(object):
+    NAT_RULE_TEMPLATE = 'sudo iptables -t nat '
+    FLUSH = '-F'
+    LIST = '-L'
+
     FORWARD_PORT_RULE_TEMPLATE = \
-        'sudo iptables -t nat {4} PREROUTING -i {0} -p tcp --dport {1} -j DNAT --to {2}:{3} -s {5}'
-    FORWARD_RULE_TEMPLATE = 'sudo iptables -t nat {2} PREROUTING -i {0} -j DNAT --to {1} -s {3}'
+        NAT_RULE_TEMPLATE + '{4} PREROUTING -i {0} -p tcp --dport {1} -j DNAT --to {2}:{3} -s {5}'
+    FORWARD_RULE_TEMPLATE = NAT_RULE_TEMPLATE + '{2} PREROUTING -i {0} -j DNAT --to {1} -s {3}'
     ADD = '-A'
     DELETE = '-D'
     CHECK = '-C'
@@ -57,3 +61,13 @@ class IptablesHelper(object):
     def check_if_forward_rule_exists(to_ip, host_interface, src):
         check_command = IptablesHelper.FORWARD_RULE_TEMPLATE.format(host_interface, to_ip, IptablesHelper.CHECK, src)
         return call(check_command, stdout=DEVNULL, stderr=DEVNULL, shell=True) == 0
+
+    @staticmethod
+    def flush():
+        flush_command = IptablesHelper.NAT_RULE_TEMPLATE + IptablesHelper.FLUSH
+        return call(flush_command, shell=True) == 0
+
+    @staticmethod
+    def list():
+        list_command = IptablesHelper.NAT_RULE_TEMPLATE + IptablesHelper.LIST
+        return call(list_command, shell=True) == 0
