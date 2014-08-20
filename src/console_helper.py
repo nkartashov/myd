@@ -119,7 +119,7 @@ class ConsoleHelper(object):
                      Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH)
             with LxcConfig(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH) as config_file:
                 config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'u 0 {0} {1}'.format(uid_start, uid_count))
-                config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'g 0 {0} {1}'.format(gid_start, gid_count))
+                config_file.append_value(ConsoleHelper.LXC_ID_MAP_KEY, 'g 0 {0} {1}'.format(gid_start, gid_count))
         call('echo ' + '"{0} veth lxcbr0 10"'.format(user) +
              ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'), shell=True)
         logging.info('Prepared uids {0} and gids {1} for unprivileged usage'.

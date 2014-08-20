@@ -9,7 +9,7 @@ from lxc_container_management.lxc_config import LxcConfig
 class LxcHelper(object):
     @staticmethod
     def create_call(name, backing_store, distro, release, arch, unprivileged=False):
-        privilege_string = "sudo " if not unprivileged else ''
+        privilege_string = 'sudo ' if not unprivileged else ''
         command = privilege_string + 'lxc-create -n {0} -B {1} -t download -- -d {2} -r {3} -a {4}'. \
             format(name, backing_store, distro, release, arch)
         if call(command, shell=True) == 0:
@@ -20,7 +20,7 @@ class LxcHelper(object):
 
     @staticmethod
     def copy_call(original_name, new_name, unprivileged):
-        privilege_string = "sudo " if not unprivileged else ''
+        privilege_string = 'sudo ' if not unprivileged else ''
         command = privilege_string + 'lxc-clone -s -o {0} -n {1}'.format(original_name, new_name)
         if call(command, shell=True) == 0:
             LxcHelper.__remember_copy(original_name, new_name)
