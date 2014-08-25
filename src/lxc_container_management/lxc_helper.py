@@ -1,18 +1,19 @@
 __author__ = 'nikita_kartashov'
 
-from subprocess import call
 import logging
+
 from config import Config
 from lxc_container_management.lxc_config import LxcConfig
+from utils.utils import logged_console_call
 
 
 class LxcHelper(object):
     @staticmethod
-    def create_call(name, backing_store, distro, release, arch, unprivileged=False):
+    def create_call(name, backing_store, distro, release, arch, unprivileged):
         privilege_string = 'sudo ' if not unprivileged else ''
         command = privilege_string + 'lxc-create -n {0} -B {1} -t download -- -d {2} -r {3} -a {4}'. \
             format(name, backing_store, distro, release, arch)
-        if call(command, shell=True) == 0:
+        if logged_console_call(command) == 0:
             LxcHelper.__remember_create(name)
             logging.info('Created {5} container {0} with backing store {1} as ({2}, {3}, {4})'.
                          format(name, backing_store, distro, release, arch,
@@ -22,7 +23,7 @@ class LxcHelper(object):
     def copy_call(original_name, new_name, unprivileged):
         privilege_string = 'sudo ' if not unprivileged else ''
         command = privilege_string + 'lxc-clone -s -o {0} -n {1}'.format(original_name, new_name)
-        if call(command, shell=True) == 0:
+        if logged_console_call(command) == 0:
             LxcHelper.__remember_copy(original_name, new_name)
             logging.info('Made a snapshot of {0} into {1}'.format(original_name, new_name))
 
@@ -30,12 +31,12 @@ class LxcHelper(object):
     def list_call(not_fancy, unprivileged):
         privilege_string = 'sudo ' if not unprivileged else ''
         command = privilege_string + 'lxc-ls {0}'.format('' if not_fancy else '-f')
-        call(command, shell=True)
+        logged_console_call(command)
 
     @staticmethod
     def remove_call(name, unprivileged):
         privilege_string = 'sudo ' if not unprivileged else ''
-        if call(privilege_string + 'lxc-destroy -n {0}'.format(name), shell=True) == 0:
+        if logged_console_call(privilege_string + 'lxc-destroy -n {0}'.format(name)) == 0:
             LxcHelper.__remember_remove(name)
             logging.info('Removed container {0}'.format(name))
 

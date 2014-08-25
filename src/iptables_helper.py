@@ -3,6 +3,7 @@ __author__ = 'nikita_kartashov'
 from subprocess import call, DEVNULL
 import logging
 
+from utils.utils import logged_console_call
 
 class IptablesHelper(object):
     NAT_RULE_TEMPLATE = 'sudo iptables -t nat '
@@ -20,16 +21,14 @@ class IptablesHelper(object):
     def full_forward(to_ip, host_interface, src, check=True):
         add_command = IptablesHelper.FORWARD_RULE_TEMPLATE.format(host_interface, to_ip, IptablesHelper.ADD, src)
         if check and not IptablesHelper.check_if_forward_rule_exists(to_ip, host_interface, src):
-            call(add_command, shell=True)
-            logging.info('Added rule: ' + add_command)
+            logged_console_call(add_command)
         else:
             logging.info('No rule was added due to checking enabled')
 
     @staticmethod
     def full_unforward(to_ip, host_interface, src):
         delete_command = IptablesHelper.FORWARD_RULE_TEMPLATE.format(host_interface, to_ip, IptablesHelper.DELETE, src)
-        call(delete_command, shell=True)
-        logging.info('Removed rule: ' + delete_command)
+        logged_console_call(delete_command)
 
     @staticmethod
     def forward_port(to_ip, to_port, host_port, host_interface, src, check=True):
@@ -38,8 +37,7 @@ class IptablesHelper(object):
                                                                        src)
         if check and not IptablesHelper.check_if_port_forward_rule_exists(to_ip, to_port, host_port, host_interface,
                                                                           src) or not check:
-            call(add_command, shell=True)
-            logging.info('Added rule: ' + add_command)
+            logged_console_call(add_command)
         else:
             logging.info('No rule was added due to checking enabled')
 
@@ -47,8 +45,7 @@ class IptablesHelper(object):
     def unforward_port(to_ip, to_port, host_port, host_interface, src):
         delete_command = IptablesHelper.FORWARD_PORT_RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port,
                                                                           IptablesHelper.DELETE, src)
-        call(delete_command, shell=True)
-        logging.info('Removed rule: ' + delete_command)
+        logged_console_call(delete_command)
 
     @staticmethod
     def check_if_port_forward_rule_exists(to_ip, to_port, host_port, host_interface, src):
@@ -65,9 +62,9 @@ class IptablesHelper(object):
     @staticmethod
     def flush():
         flush_command = IptablesHelper.NAT_RULE_TEMPLATE + IptablesHelper.FLUSH
-        return call(flush_command, shell=True) == 0
+        return logged_console_call(flush_command) == 0
 
     @staticmethod
     def list():
         list_command = IptablesHelper.NAT_RULE_TEMPLATE + IptablesHelper.LIST
-        return call(list_command, shell=True) == 0
+        return logged_console_call(list_command) == 0

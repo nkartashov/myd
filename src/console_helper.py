@@ -11,6 +11,7 @@ from utils.error_handling import log_print_error, no_config_found_message
 from iptables_helper import IptablesHelper
 from lxc_container_management.lxc_config import LxcConfig
 from utils.string_utils import split_to_function
+from utils.utils import logged_console_call
 
 
 class ConsoleHelper(object):
@@ -79,11 +80,11 @@ class ConsoleHelper(object):
 
     @staticmethod
     def __assign_uids_to_user(ids_start, ids_stop, user='$USER'):
-        call('sudo usermod --add-subuids {0}-{1} {2}'.format(ids_start, ids_stop, user), shell=True)
+        logged_console_call('sudo usermod --add-subuids {0}-{1} {2}'.format(ids_start, ids_stop, user))
 
     @staticmethod
     def __assign_gids_to_user(ids_start, ids_stop, user='$USER'):
-        call('sudo usermod --add-subgids {0}-{1} {2}'.format(ids_start, ids_stop, user), shell=True)
+        logged_console_call('sudo usermod --add-subgids {0}-{1} {2}'.format(ids_start, ids_stop, user))
 
     @staticmethod
     def __ensure_unprivileged_dirs_exist():
@@ -97,7 +98,7 @@ class ConsoleHelper(object):
 
     @staticmethod
     def __make_home_dir_executable():
-        call('sudo chmod +x $HOME', shell=True)
+        logged_console_call('sudo chmod +x $HOME')
 
     @staticmethod
     def prepare_unprivileged_config(uid_string, gid_string):
@@ -117,16 +118,25 @@ class ConsoleHelper(object):
         if not path.exists(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH):
             copyfile(Config.default_unprivileged_config_resource_path(),
                      Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH)
-            with LxcConfig(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH) as config_file:
-                config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'u 0 {0} {1}'.format(uid_start, uid_count))
-                config_file.append_value(ConsoleHelper.LXC_ID_MAP_KEY, 'g 0 {0} {1}'.format(gid_start, gid_count))
-        call('echo ' + '"{0} veth lxcbr0 10"'.format(user) +
-             ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'), shell=True)
+        with LxcConfig(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH) as config_file:
+            config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'u 0 {0} {1}'.format(uid_start, uid_count))
+            config_file.append_value(ConsoleHelper.LXC_ID_MAP_KEY, 'g 0 {0} {1}'.format(gid_start, gid_count))
+        logged_console_call('echo ' + '"{0} veth lxcbr0 10"'.format(user) +
+                            ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'))
+        # Following line gives everyone write permissions into container backing store path
+        logged_console_call('sudo chmod a+w ' + Config.lxc_backing_store_path(True))
         logging.info('Prepared uids {0} and gids {1} for unprivileged usage'.
                      format(uid_string, gid_string))
 
     @staticmethod
-    def mount_backing_store_device(device, filesystem, unprivileged):
+    def mount_backing_store_device(device, filesystem, unprivileged, option_input_string):
         mount_path = Config.lxc_backing_store_path(unprivileged)
         makedirs(mount_path, exist_ok=True)
-        call('sudo mount -t {0} {1} {2}'.format(filesystem, device, mount_path), shell=True)
+        option_set = set([option.strip() for option in option_input_string.split()])
+        if unprivileged:
+            # Fixes the notification while deleting btrfs backed storage in unpriv. container
+            # applied to any unpriv. container w/o thinking about backing storage, BAD
+            # FIXME
+            option_set.add('user_subvol_rm_allowed')
+        option_string = '-o {0}'.format(','.join(option_set)) if len(option_set) else ''
+        logged_console_call('sudo mount -t {0} {1} {2} {3}'.format(filesystem, device, mount_path, option_string))
