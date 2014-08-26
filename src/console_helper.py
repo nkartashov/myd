@@ -3,7 +3,6 @@ __author__ = 'nikita_kartashov'
 import logging
 from shutil import copyfile
 from os import path, makedirs
-from subprocess import call
 from getpass import getuser
 
 from config import Config
@@ -101,7 +100,7 @@ class ConsoleHelper(object):
         logged_console_call('sudo chmod +x $HOME')
 
     @staticmethod
-    def prepare_unprivileged_config(uid_string, gid_string):
+    def prepare_unprivileged_config(uid_string, gid_string, network_devices_number, user):
         def split_uids_guids(input_string):
             return split_to_function(input_string, '-', int)
 
@@ -110,7 +109,8 @@ class ConsoleHelper(object):
         gid_start, gid_stop = split_uids_guids(gid_string)
         uid_count = uid_stop - uid_start
         gid_count = gid_stop - gid_start
-        user = getuser()
+        if not user:
+            user = getuser()
         ConsoleHelper.__assign_uids_to_user(uid_start, uid_stop, user)
         ConsoleHelper.__assign_gids_to_user(gid_start, gid_stop, user)
         ConsoleHelper.__make_home_dir_executable()
@@ -121,8 +121,9 @@ class ConsoleHelper(object):
         with LxcConfig(Config.UNPRIVILEGED_CONTAINER_CONFIG_PATH) as config_file:
             config_file.set_value(ConsoleHelper.LXC_ID_MAP_KEY, 'u 0 {0} {1}'.format(uid_start, uid_count))
             config_file.append_value(ConsoleHelper.LXC_ID_MAP_KEY, 'g 0 {0} {1}'.format(gid_start, gid_count))
-        logged_console_call('echo ' + '"{0} veth lxcbr0 10"'.format(user) +
-                            ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'))
+        # Adds slots for network devices in unprivileged containers
+        logged_console_call('echo ' + '"{0} veth lxcbr0 {1}"'.format(user, network_devices_number) +
+                            ' | sudo tee -a {0}'.format('/etc/lxc/lxc-usernet'), mute=True)
         # Following line gives everyone write permissions into container backing store path
         logged_console_call('sudo chmod a+w ' + Config.lxc_backing_store_path(True))
         logging.info('Prepared uids {0} and gids {1} for unprivileged usage'.

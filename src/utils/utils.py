@@ -1,9 +1,12 @@
 __author__ = 'nikita_kartashov'
 
 from logging import info
-from subprocess import call
+from subprocess import call, DEVNULL
 
 
-def logged_console_call(command):
+def logged_console_call(command, mute=False):
     info(command)
-    return call(command, shell=True)
+    if mute:
+        return call(command, stdout=DEVNULL, stderr=DEVNULL, shell=True)
+    else:
+        return call(command, shell=True)

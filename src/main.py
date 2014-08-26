@@ -117,6 +117,10 @@ if __name__ == "__main__":
                                              help='User ids in the format START-END')
     prepare_unprivileged_parser.add_argument('-gids', '--group-ids', required=True,
                                              help='User ids in the format START-END')
+    prepare_unprivileged_parser.add_argument('-ndn', '--network-devices-number', default=10,
+                                             help='Number of network devices for unprivileged containers')
+    prepare_unprivileged_parser.add_argument('-u', '--user', default=None,
+                                             help='User to which the ids will be assigned')
 
     mount_parser = program_subparsers.add_parser('mount', help='Mounts the specified device into a given path')
     mount_parser.add_argument('-d', '--device', required=True, help='Device to mount')
@@ -186,7 +190,7 @@ if __name__ == "__main__":
     if args.command == 'wipe':
         Config.wipe()
     if args.command == 'prepare-unprivileged':
-        ConsoleHelper.prepare_unprivileged_config(args.user_ids, args.group_ids)
+        ConsoleHelper.prepare_unprivileged_config(args.user_ids, args.group_ids, args.network_devices_number, args.user)
     if args.command == 'mount':
         ConsoleHelper.mount_backing_store_device(args.device, args.filesystem, args.unprivileged, args.options)
     if args.command == 'print-log':

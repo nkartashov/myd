@@ -1,6 +1,5 @@
 __author__ = 'nikita_kartashov'
 
-from subprocess import call, DEVNULL
 import logging
 
 from utils.utils import logged_console_call
@@ -52,12 +51,12 @@ class IptablesHelper(object):
         check_command = IptablesHelper.FORWARD_PORT_RULE_TEMPLATE.format(host_interface, host_port, to_ip, to_port,
                                                                          IptablesHelper.CHECK,
                                                                          src)
-        return call(check_command, stdout=DEVNULL, stderr=DEVNULL, shell=True) == 0
+        return logged_console_call(check_command, mute=True) == 0
 
     @staticmethod
     def check_if_forward_rule_exists(to_ip, host_interface, src):
         check_command = IptablesHelper.FORWARD_RULE_TEMPLATE.format(host_interface, to_ip, IptablesHelper.CHECK, src)
-        return call(check_command, stdout=DEVNULL, stderr=DEVNULL, shell=True) == 0
+        return logged_console_call(check_command, mute=True) == 0
 
     @staticmethod
     def flush():
