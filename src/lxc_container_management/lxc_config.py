@@ -4,7 +4,17 @@ from collections import OrderedDict
 
 
 class LxcConfig(object):
+    """
+    Class unifying interaction with container config
+    """
+
     def __init__(self, filename):
+        """
+        Reads a new config from a filename
+        :param filename: filename of the config file
+        :return: None
+        """
+
         self.__properties = OrderedDict()
         self.__filename = filename
         self.__has_been_modified = False
@@ -20,9 +30,22 @@ class LxcConfig(object):
                 self.__append_property_value(*value_pair)
 
     def __enter__(self):
+        """
+        Is called on entering a with statement, does nothing now
+        :return: self instance
+        """
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Dumps the config if it has been modified
+        :param exc_type: UNUSED
+        :param exc_val: UNUSED
+        :param exc_tb: UNUSED
+        :return: None
+        """
+
         if self.__has_been_modified:
             self.__dump()
 
@@ -39,6 +62,13 @@ class LxcConfig(object):
         self.__has_been_modified = True
 
     def append_value(self, key, value):
+        """
+        Appends value to a property
+        :param key: property name
+        :param value: value to be appended
+        :return: None
+        """
+
         self.__modified()
         self.__append_property_value(key, value)
 
@@ -46,14 +76,43 @@ class LxcConfig(object):
         return self.__properties.get(item, [])
 
     def erase_property(self, key):
+        """
+        Erases all values of the property
+        :param key: property name
+        :return: None
+        """
+
         self.__modified()
         self.__properties[key] = []
 
+    def remove_last_value(self, key):
+        """
+        If there is at least 1 value of the property, the last one is removed
+        :param key: property name
+        :return: None
+        """
+
+        if len(self.__properties[key]) > 0:
+            self.__modified()
+            self.__properties[key].pop()
+
     def set_value(self, key, value):
+        """
+        Sets the property to a value
+        :param key: property name
+        :param value: new value
+        :return: None
+        """
+
         self.__modified()
         self.__properties[key] = [value]
 
     def print(self):
+        """
+        Prints the config to the screen
+        :return: None
+        """
+
         for key, value in self.__properties.items():
                 for item in value:
                     print('{0} = {1}'.format(key, item))

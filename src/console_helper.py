@@ -14,13 +14,24 @@ from utils.utils import logged_console_call
 
 
 class ConsoleHelper(object):
+    """
+    Helper containing console calls
+    """
+
     LXC_IP_KEY = 'lxc.network.ipv4'
     LXC_ID_MAP_KEY = 'lxc.id_map'
 
     FORWARD_ARGUMENT_NUMBER = 5
 
     @staticmethod
-    def print_config_file(container_name, unprivileged=False):
+    def print_config_file(container_name, unprivileged):
+        """
+        Prints the config file of the container with *container_name*
+        :param container_name: the name of the container, which config is printed
+        :param unprivileged: whether to print the config of the unprivileged container
+        :return:
+        """
+
         config_file_path = Config.container_config_path(container_name, unprivileged)
         try:
             with LxcConfig(config_file_path) as config_file:
@@ -53,6 +64,13 @@ class ConsoleHelper(object):
 
     @staticmethod
     def patch_container_config(container_name, static_ip):
+        """
+        Adds a line to *container_name* container config with its new *static_ip*
+        :param container_name: name of the container config in question
+        :param static_ip: the desired static ip
+        :return: None
+        """
+
         config_file_path = Config.container_config_path(container_name, False)
         try:
             with LxcConfig(config_file_path) as config_file:
@@ -66,13 +84,19 @@ class ConsoleHelper(object):
 
     @staticmethod
     def unpatch_container_config(container_name):
+        """
+        Reverses the effect of patch_container_config call by removing the last line with static ip
+        :param container_name: container in question
+        :return: None
+        """
+
         config_file_path = Config.container_config_path(container_name, False)
         try:
             with LxcConfig(config_file_path) as config_file:
                 if not config_file[ConsoleHelper.LXC_IP_KEY]:
                     log_print_error('Config file has not been patched')
                     return
-                config_file.erase_property(ConsoleHelper.LXC_IP_KEY)
+                config_file.remove_last_value(ConsoleHelper.LXC_IP_KEY)
                 logging.info('Config file for container {0} patched'.format(container_name))
         except FileNotFoundError:
             log_print_error('No config for container {0} at {1}'.format(container_name, config_file_path))
@@ -101,7 +125,22 @@ class ConsoleHelper(object):
 
     @staticmethod
     def prepare_unprivileged_config(uid_string, gid_string, network_devices_number, user):
+        """
+        Performs procedures without which unprivileged container creation is impossible
+        :param uid_string: string with user ids starting "from-to"
+        :param gid_string: string with group ids starting "from-to"
+        :param network_devices_number: number of network devices available for unprivileged containers
+        :param user: user, who gets the devices
+        :return: None
+        """
+
         def split_uids_guids(input_string):
+            """
+            Splits the string in the format "from-to" into two integers list
+            :param input_string: the string in the format "from-to"
+            :return: list of numbers
+            """
+
             return split_to_function(input_string, '-', int)
 
         ConsoleHelper.__ensure_unprivileged_dirs_exist()
@@ -130,7 +169,16 @@ class ConsoleHelper(object):
                      format(uid_string, gid_string))
 
     @staticmethod
-    def mount_backing_store_device(device, filesystem, unprivileged, option_input_string):
+    def mount_backing_store_device(device, filesystem, unprivileged, option_input_string=''):
+        """
+        Mounts the *device* into a directory considering if container *unprivileged* with a set of options
+        :param device: device to be mounted
+        :param filesystem: filesystem of the device
+        :param unprivileged: if the container is unprivileged
+        :param option_input_string: string of options
+        :return: None
+        """
+
         mount_path = Config.lxc_backing_store_path(unprivileged)
         makedirs(mount_path, exist_ok=True)
         option_set = set([option.strip() for option in option_input_string.split()])
